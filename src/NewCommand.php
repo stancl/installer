@@ -243,6 +243,11 @@ class NewCommand extends Command
                 $version = 'dev-workos';
             }
 
+            if ($version === 'dev-master') {
+                // --dev has no effect with starter kits, which also use main instead of master
+                $version = '';
+            }
+
             $createProjectCommand = $composer." create-project {$starterKit} \"{$directory}\" $version --stability=dev";
 
             if (! $this->usingLaravelStarterKit($input) && str_contains($starterKit, '://')) {
@@ -862,10 +867,10 @@ class NewCommand extends Command
      */
     protected function getVersion(InputInterface $input)
     {
-        if ($version = $this->getOption('constraint')) {
+        if ($version = $input->getOption('constraint')) {
             return $version;
         }
-        
+
         if ($input->getOption('dev')) {
             return 'dev-master';
         }
