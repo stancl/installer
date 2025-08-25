@@ -62,6 +62,7 @@ class NewCommand extends Command
             ->addOption('phpunit', null, InputOption::VALUE_NONE, 'Install the PHPUnit testing framework')
             ->addOption('npm', null, InputOption::VALUE_NONE, 'Install and build NPM dependencies')
             ->addOption('using', null, InputOption::VALUE_OPTIONAL, 'Install a custom starter kit from a community maintained package')
+            ->addOption('constraint', null, InputOption::VALUE_OPTIONAL, 'Install a specific version constraint of the selected starter kit')
             ->addOption('force', 'f', InputOption::VALUE_NONE, 'Forces install even if the directory already exists');
     }
 
@@ -234,15 +235,15 @@ class NewCommand extends Command
         $starterKit = $this->getStarterKit($input);
 
         if ($starterKit) {
-            $createProjectCommand = $composer." create-project {$starterKit} \"{$directory}\" --stability=dev";
-
             if ($this->usingLaravelStarterKit($input) && $input->getOption('livewire-class-components')) {
-                $createProjectCommand = str_replace(" {$starterKit} ", " {$starterKit}:dev-components ", $createProjectCommand);
+                $version = 'dev-components';
             }
 
             if ($this->usingLaravelStarterKit($input) && $input->getOption('workos')) {
-                $createProjectCommand = str_replace(" {$starterKit} ", " {$starterKit}:dev-workos ", $createProjectCommand);
+                $version = 'dev-workos';
             }
+
+            $createProjectCommand = $composer." create-project {$starterKit} \"{$directory}\" $version --stability=dev";
 
             if (! $this->usingLaravelStarterKit($input) && str_contains($starterKit, '://')) {
                 $createProjectCommand = 'npx tiged@latest '.$starterKit.' "'.$directory.'" && cd "'.$directory.'" && composer install';
@@ -861,6 +862,10 @@ class NewCommand extends Command
      */
     protected function getVersion(InputInterface $input)
     {
+        if ($version = $this->getOption('constraint')) {
+            return $version;
+        }
+        
         if ($input->getOption('dev')) {
             return 'dev-master';
         }
